@@ -29,11 +29,11 @@ import index
 
 # boundary type [segm1 segm1 ...]
 # types: 0: dirichlet; 1: neumann
-bt = [0, 1, 0, 1]
+bt = [1, 0, 1, 0]
 # boundary condition [segm1 segm2 ...]
-bc = [0, 0 , 1, 0]
+bc = [0, 1 , 0, 0]
 
-example = gmsh.Parse('squaremesh0')
+example = gmsh.Parse('squaremesh2')
 
 nodes_coord_ord = index.nodes_coord(example.line_type, example.nodes_bound_coord)
 
@@ -51,28 +51,46 @@ T, q = boundary.mount_vector(z, example.nn, example.ne, bound)
 
 Fin, Gin = solve.int_point(example.nn, example.nodes_int_cord, example.nodes_bound_coord, example.line_type)
 
-Tint = Gin @ T - Fin @ q           
-
+# Tint = Fin @ T - Gin @ q          
+Tint = np.dot(Fin,T) - np.dot(Gin,q)
+# for key in node_med:
+#     xy=node_med[key]
+#     for i in range(len(xy)):
+#         xyno=xy[0]
+#         x=xyno[0]
+#         y=xyno[1]
+#         print(x)
+x=np.array([]);
+y=np.array([]);
+for i in range(len(node_med)):
+    v=node_med[i]
+    for j in range(len(v)):
+            xy=v[j]
+            x=np.append(x,np.array(xy[0]))
+            y=np.append(y,np.array(xy[1]))
 fig = plt.figure()
 ax = fig.add_axes([.1, .1, .8, .8])
-x = np.append(nodes_coord_ord[:, 0], example.nodes_int_cord[:, 0])
-y = np.append(nodes_coord_ord[:, 1], example.nodes_int_cord[:, 1])
+# x = np.append(nodes_coord_ord[:, 0], example.nodes_int_cord[:, 0])
+# y = np.append(nodes_coord_ord[:, 1], example.nodes_int_cord[:, 1])
+x = np.append(x, example.nodes_int_cord[:, 0])
+y = np.append(y, example.nodes_int_cord[:, 1])
 Z = np.append(T, Tint)
-C = ax.tricontourf(x, y, Z, 50, cmap='viridis')
+# C = ax.tricontourf(x, y, Z, 50, cmap='viridis')
+C = ax.tricontourf(x, y, Z, 50)
 ax.set_aspect('equal')
 plt.colorbar(C)
 
 plt.show()
 
-#print(T,Tint)       
-#print('boundary nodes coord', example.nodes_bound_coord)
-#print('interior nodes', example.nodes_int_cord)
-#print('connective matrix', example.CONN1)
-#print('number of nodes', example.nn)
-#print('number of elements', example.ne)
-#print('line type phisical group', example.line_type)
-#print('element half node', node_med)
-#print('length',length)    
-#print('boundary condition ',bound)
-#print('radius vector between nodes and font node',rad)
-#print('normal vector',norm)
+# print(T,Tint)       
+# print('boundary nodes coord', example.nodes_bound_coord)
+# print('interior nodes', example.nodes_int_cord)
+# print('connective matrix', example.CONN1)
+# print('number of nodes', example.nn)
+# print('number of elements', example.ne)
+# print('line type phisical group', example.line_type)
+# print('element half node', node_med)
+# print('length',length)    
+# print('boundary condition ',bound)
+# print('radius vector between nodes and font node',rad)
+# print('normal vector',norm)

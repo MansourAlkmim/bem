@@ -21,8 +21,8 @@ def mount_matrix(nn, node_med, nodes_bound_coord, line_type):
                     if ii == jj:
                        length = geometry.length(nodes, nodes_bound_coord)
                        k = 1
-                       F[ii, jj] = (length/(2*np.pi*k))*(1 - np.log(length/2))
-                       G[ii, jj] = 0
+                       G[ii, jj] = (length/(2*np.pi*k))*(1 - np.log(length/2))
+                       F[ii, jj] = -0.5
                        jj = jj + 1
                     else:
                         intF, intG = solve.quad(nodes, nodes_bound_coord, coord_med)
@@ -38,17 +38,11 @@ def mount_linear_system(nn, F, G, bound):
     for line in range(len(F)):
         for column, _ in enumerate(F[line, ...]):
             if bound[0, column] == 0: # T is known
-                A[line, column] = -F[line, column]
-                if line != column:
-                    b[column] = -bound[1, column] * G[line, column]
-                else: #line == column
-                    b[column] = -bound[1, column] * G[line, column] - bound[1, column]/2
+                A[line, column] = -G[line, column]
+                b[line] = b[line]-bound[1, column] * F[line, column]
             else: #bound[line][column][0] == 1:  q is known
-                b[column] = bound[1, column] * F[line, column]
-                if line != column:
-                    A[line, column] = G[line, column]
-                else: #line == column
-                     A[line, column] = G[line, column] - 1/2
+                b[line] = b[line]+bound[1, column] * G[line, column]
+                A[line, column] = F[line, column]
     return A, b
     
 def nodes_coord(line_type, nodes_bound_coord):

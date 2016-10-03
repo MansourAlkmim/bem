@@ -13,20 +13,25 @@ def quad(nodes, nodes_bound_coord, coord_font):
     """
     
     """
-    jacobian, xsi, weight = gauss_legendre(nodes, nodes_bound_coord)
+    jacobian, xsi, weight,x,y,nx,ny = gauss_legendre(nodes, nodes_bound_coord)
     coord_node = nodes_bound_coord[nodes[0]]
     rad, norm = geometry.vector(coord_font, coord_node)
     magr = np.linalg.norm(rad)
     
     sumF = 0.0
     sumG = 0.0
+    comprimento=0;
     # conductivity
     k = 1
-    for i in xsi:
-        sumF = sumF + np.log(magr)* jacobian * weight
-        sumG = sumG + ((rad[0]*norm[0] + rad[1]*norm[1])/magr**2) * jacobian * weight
-    intF = -sumF/(2*np.pi*k)
-    intG = sumG/(2*np.pi)
+    for i in range(len(xsi)):
+        rx=x[i]-coord_font[0]
+        ry=y[i]-coord_font[1]
+        r=np.sqrt(rx**2+ry**2)
+        sumG = sumG + np.log(r)* jacobian * weight[i]
+        comprimento = comprimento + jacobian * weight[i]
+        sumF = sumF + (rx*nx + ry*ny)/r**2 * jacobian * weight[i]
+    intF = sumF/(2*np.pi)
+    intG = -sumG/(2*np.pi*k)
 
     return intF, intG
 
@@ -36,14 +41,18 @@ def gauss_legendre(nodes, nodes_bound_coord):
     x1, y1 = nodes_bound_coord[nodes[0]]    
     x2, y2 = nodes_bound_coord[nodes[1]]
     
-    xsi, weight = np.polynomial.legendre.leggauss(1)
-    N1 = (1/2)*(1-xsi); dN1_dxsi = np.diff(N1, xsi)
-    N2 = (1/2)*(1+xsi); dN2_dxsi = np.diff(N2, xsi)
+    xsi, weight = np.polynomial.legendre.leggauss(4)
+    N1 = (1/2)*(1-xsi); dN1_dxsi = -1./2.
+    N2 = (1/2)*(1+xsi); dN2_dxsi = 1./2.
     dx_dxsi = dN1_dxsi*x1 + dN2_dxsi*x2
     dy_dxsi = dN1_dxsi*y1 + dN2_dxsi*y2
+    x=N1*x1+N2*x2;
+    y=N1*y1+N2*y2;
     jacobian = np.sqrt(dx_dxsi**2 + dy_dxsi**2)
+    nx=dy_dxsi/jacobian
+    ny=-dx_dxsi/jacobian
 
-    return jacobian, xsi, weight
+    return jacobian, xsi, weight,x,y,nx,ny
 
 def int_point(nn, nodes_int_cord, nodes_bound_coord, line_type):
     # interior point
